@@ -3478,10 +3478,10 @@ void database::_apply_transaction(const signed_transaction& trx)
       create<transaction_object>([&](transaction_object& transaction) {
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
-         ilog("${t}", ("t", transaction) );
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
       });
    }
+   ilog("${t}", ("t", trx) );
 
    notify_pre_apply_transaction( note );
 
