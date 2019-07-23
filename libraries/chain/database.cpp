@@ -3474,13 +3474,13 @@ void database::_apply_transaction(const signed_transaction& trx)
    //Insert transaction into unique transactions database.
    if( !(skip & skip_transaction_dupe_check) )
    {
+      ilog( "trx_id: ${i} ${t}", ("i", trx_id), ("t", trx) );
       create<transaction_object>([&](transaction_object& transaction) {
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
       });
    }
-   ilog( "trx_id: ${t} ${r}", ("t", trx_id), ("r", trx) );
 
    notify_pre_apply_transaction( note );
 
