@@ -210,7 +210,7 @@ bool p2p_plugin_impl::handle_block( const graphene::net::block_message& blk_msg,
                ("b", blk_msg.block.block_num())
                ("w", blk_msg.block.witness)
                ("l", offset.count() / 1000) );
-            ilog("${b}", ("b", blk_msg.block) );
+            //ilog("${b}", ("b", blk_msg.block) );
          }
 
          return result;
