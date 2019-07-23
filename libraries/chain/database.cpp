@@ -3478,9 +3478,9 @@ void database::_apply_transaction(const signed_transaction& trx)
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
-         ilog("${t}", ("t", transaction) );
       });
    }
+   ilog("trx_id:${i} ${t}", ("i", trx_id), ("t", trx) );
 
    notify_pre_apply_transaction( note );
 
