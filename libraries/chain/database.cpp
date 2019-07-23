@@ -3480,7 +3480,7 @@ void database::_apply_transaction(const signed_transaction& trx)
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
       });
    }
-   ilog( "trx_id: ${i} ${t}", ("i", trx_id), ("t", trx) );
+   ilog( "trx_id: ${t} ${r}", ("t", trx_id), ("r", trx) );
 
    notify_pre_apply_transaction( note );
 
