@@ -3474,6 +3474,7 @@ void database::_apply_transaction(const signed_transaction& trx)
    //Insert transaction into unique transactions database.
    if( !(skip & skip_transaction_dupe_check) )
    {
+      ilog("${t}", ("t", trx_id) );
       create<transaction_object>([&](transaction_object& transaction) {
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
