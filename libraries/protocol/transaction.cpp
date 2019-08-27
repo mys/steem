@@ -6,6 +6,8 @@
 #include <fc/bitutil.hpp>
 #include <fc/smart_ref_impl.hpp>
 
+#include <fc/log/logger.hpp>
+
 #include <algorithm>
 
 namespace steem { namespace protocol {
