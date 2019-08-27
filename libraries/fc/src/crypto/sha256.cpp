@@ -63,9 +63,11 @@ namespace fc {
       sha256 h;
       ilog( "result h.data: ${h}", ("h", (uint8_t*)h.data()) );
       SHA256_Final((uint8_t*)h.data(), &my->ctx );
+      ilog( "return h: ${h}", ("h", h) );
       return h;
     }
     void sha256::encoder::reset() {
+      ilog( "init m: ${m}", ("m", &my->ctx) );
       SHA256_Init( &my->ctx);
     }
 
