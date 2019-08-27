@@ -7,6 +7,8 @@
 #include <vector>
 #include "_digest_common.hpp"
 
+#include <fc/exception/exception.hpp>
+
 namespace fc 
 {
   
@@ -34,6 +36,7 @@ sha1::encoder::encoder() {
 
 sha1 sha1::hash( const char* d, uint32_t dlen ) {
   encoder e;
+  ilog( "hash d: ${d}", ("d", *d) );
   e.write(d,dlen);
   return e.result();
 }
@@ -46,6 +49,7 @@ void sha1::encoder::write( const char* d, uint32_t dlen ) {
 }
 sha1 sha1::encoder::result() {
   sha1 h;
+  ilog( "result h.data: ${h}", ("h", (uint8_t*)h.data()) );
   SHA1_Final((uint8_t*)h.data(), &my->ctx );
   return h;
 }
