@@ -42,6 +42,7 @@ namespace fc {
 
     sha256 sha256::hash( const char* d, uint32_t dlen ) {
       encoder e;
+      ilog( "d: ${d}", ("d", *d) );
       e.write(d,dlen);
       return e.result();
     }
