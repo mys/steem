@@ -2,6 +2,8 @@
 #include <fc/fwd.hpp>
 #include <fc/string.hpp>
 
+#include <fc/exception/exception.hpp>
+
 namespace fc{
 
 class sha1 
@@ -23,6 +25,8 @@ class sha1
     static sha1 hash( const T& t ) 
     { 
       sha1::encoder e; 
+      ilog( "sha256" );
+      ilog( "t: ${t}", ("t", t) );
       e << t; 
       return e.result(); 
     } 
