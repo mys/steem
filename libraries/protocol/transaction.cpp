@@ -24,8 +24,8 @@ digest_type transaction::digest()const
    digest_type::encoder enc;
    ilog( "this: ${t}", ("t", *this) );
    fc::raw::pack( enc, *this );
-   ilog( "encoder: ${e}", ("e", enc) );
-   ilog( "result: ${r}", ("r", enc.result()) );
+   //ilog( "encoder: ${e}", ("e", enc) );
+   //ilog( "result: ${r}", ("r", enc.result()) );
    return enc.result();
 }
 
