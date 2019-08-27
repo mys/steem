@@ -4,8 +4,6 @@
 #include <fc/platform_independence.hpp>
 #include <fc/io/raw_fwd.hpp>
 
-#include <fc/exception/exception.hpp>
-
 namespace fc
 {
 
@@ -30,7 +28,6 @@ class sha256
     static sha256 hash( const T& t )
     {
       sha256::encoder e;
-      ilog( "sha256" );
       fc::raw::pack(e,t);
       return e.result();
     }
