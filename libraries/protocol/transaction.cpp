@@ -6,7 +6,7 @@
 #include <fc/bitutil.hpp>
 #include <fc/smart_ref_impl.hpp>
 
-#include <fc/log/logger.hpp>
+#include <fc/exception/exception.hpp>
 
 #include <algorithm>
 
