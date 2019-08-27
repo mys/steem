@@ -57,6 +57,7 @@ namespace fc {
     }
 
     void sha256::encoder::write( const char* d, uint32_t dlen ) {
+      ilog( "update: ${u}", ("u", d) );
       SHA256_Update( &my->ctx, d, dlen);
     }
     sha256 sha256::encoder::result() {
