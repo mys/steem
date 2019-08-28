@@ -1199,7 +1199,42 @@ BOOST_AUTO_TEST_CASE( transfer_validate )
    {
       BOOST_TEST_MESSAGE( "Testing: transfer_validate" );
 
-      validate_database();
+      transfer_operation op;
+      op.from = "alice";
+      op.to = "bob";
+      op.memo = "Memo";
+      op.amount = asset( 100, STEEM_SYMBOL );
+      op.validate();
+
+      BOOST_TEST_MESSAGE( " --- Invalid from account" );
+      op.from = "alice-";
+      STEEM_REQUIRE_THROW( op.validate(), fc::assert_exception );
+      op.from = "alice";
+
+      BOOST_TEST_MESSAGE( " --- Invalid to account" );
+      op.to = "bob-";
+      STEEM_REQUIRE_THROW( op.validate(), fc::assert_exception );
+      op.to = "bob";
+
+      BOOST_TEST_MESSAGE( " --- Memo too long" );
+      std::string memo;
+      for ( int i = 0; i < STEEM_MAX_MEMO_SIZE + 1; i++ )
+         memo += "x";
+      op.memo = memo;
+      STEEM_REQUIRE_THROW( op.validate(), fc::assert_exception );
+      op.memo = "Memo";
+
+      BOOST_TEST_MESSAGE( " --- Negative amount" );
+      op.amount = -op.amount;
+      STEEM_REQUIRE_THROW( op.validate(), fc::assert_exception );
+      op.amount = -op.amount;
+
+      BOOST_TEST_MESSAGE( " --- Transferring vests" );
+      op.amount = asset( 100, VESTS_SYMBOL );
+      STEEM_REQUIRE_THROW( op.validate(), fc::assert_exception );
+      op.amount = asset( 100, STEEM_SYMBOL );
+
+      op.validate();
    }
    FC_LOG_AND_RETHROW()
 }
@@ -2340,6 +2375,82 @@ BOOST_AUTO_TEST_CASE( custom_json_authorities )
    expected.insert( "bob" );
    op.get_required_posting_authorities( auths );
    BOOST_REQUIRE( auths == expected );
+}
+
+BOOST_AUTO_TEST_CASE( custom_json_rate_limit )
+{
+   try
+   {
+      BOOST_TEST_MESSAGE( "Testing: custom_json_rate_limit" );
+
+      ACTORS( (alice)(bob)(sam) )
+
+      BOOST_TEST_MESSAGE( "--- Testing 5 custom json ops as separate transactions" );
+
+      custom_json_operation op;
+      signed_transaction tx;
+      op.required_posting_auths.insert( "alice" );
+      tx.set_expiration( db->head_block_time() + STEEM_MAX_TIME_UNTIL_EXPIRATION );
+
+      for( int i = 0; i < 5; i++ )
+      {
+         op.json = fc::to_string( i );
+         tx.clear();
+         tx.operations.push_back( op );
+         sign( tx, alice_private_key );
+         db->push_transaction( tx, 0 );
+      }
+
+
+      BOOST_TEST_MESSAGE( "--- Testing failure pushing 6th custom json op tx" );
+
+      op.json = "toomany";
+      tx.clear();
+      tx.operations.push_back( op );
+      sign( tx, alice_private_key );
+
+      STEEM_REQUIRE_THROW( db->push_transaction( tx, 0 ), plugin_exception );
+
+
+      BOOST_TEST_MESSAGE( "--- Testing 5 custom json ops in one transaction" );
+      tx.clear();
+      op.json = "foobar";
+      op.required_posting_auths.clear();
+      op.required_posting_auths.insert( "bob" );
+
+      for( int i = 0; i < 5; i++ )
+      {
+         tx.operations.push_back( op );
+      }
+
+      sign( tx, bob_private_key );
+      db->push_transaction( tx, 0 );
+
+
+      BOOST_TEST_MESSAGE( "--- Testing failure pushing 6th custom json op tx" );
+
+      op.json = "toomany";
+      tx.clear();
+      tx.operations.push_back( op );
+      sign( tx, bob_private_key );
+
+      STEEM_REQUIRE_THROW( db->push_transaction( tx, 0 ), plugin_exception );
+
+
+      BOOST_TEST_MESSAGE( "--- Testing failure of 6 custom json ops in one transaction" );
+      tx.clear();
+      op.required_posting_auths.clear();
+      op.required_posting_auths.insert( "sam" );
+
+      for( int i = 0; i < 6; i++ )
+      {
+         tx.operations.push_back( op );
+      }
+
+      sign( tx, sam_private_key );
+      STEEM_REQUIRE_THROW( db->push_transaction( tx, 0 ), plugin_exception );
+   }
+   FC_LOG_AND_RETHROW()
 }
 
 BOOST_AUTO_TEST_CASE( custom_binary_authorities )
@@ -8076,14 +8187,17 @@ BOOST_AUTO_TEST_CASE( account_update2_apply )
 
       const account_object& acct = db->get_account( "alice" );
       const account_authority_object& acct_auth = db->get< account_authority_object, by_account >( "alice" );
-      const account_metadata_object& acct_metadata = db->get< account_metadata_object, by_account >( acct.id );
 
       BOOST_REQUIRE( acct.name == "alice" );
       BOOST_REQUIRE( acct_auth.owner == authority( 1, new_private_key.get_public_key(), 1 ) );
       BOOST_REQUIRE( acct_auth.active == authority( 2, new_private_key.get_public_key(), 2 ) );
       BOOST_REQUIRE( acct.memo_key == new_private_key.get_public_key() );
+
+#ifdef IS_LOW_MEM
+      const account_metadata_object& acct_metadata = db->get< account_metadata_object, by_account >( acct.id );
       BOOST_REQUIRE( acct_metadata.json_metadata == "{\"bar\":\"foo\"}" );
       BOOST_REQUIRE( acct_metadata.posting_json_metadata == "{\"success\":true}" );
+#endif
 
       validate_database();
 

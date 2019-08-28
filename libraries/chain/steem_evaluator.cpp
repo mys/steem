@@ -312,8 +312,6 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
    const auto& props = _db.get_dynamic_global_properties();
 
-   FC_ASSERT( creator.balance >= o.fee, "Insufficient balance to create account.", ( "creator.balance", creator.balance )( "required", o.fee ) );
-
    const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
    if( _db.has_hardfork( STEEM_HARDFORK_0_20__2651 ) || _db.is_producing() )
@@ -1020,9 +1018,6 @@ void escrow_transfer_evaluator::do_apply( const escrow_transfer_operation& o )
       else
          sbd_spent += o.fee;
 
-      FC_ASSERT( from_account.balance >= steem_spent, "Account cannot cover STEEM costs of escrow. Required: ${r} Available: ${a}", ("r",steem_spent)("a",from_account.balance) );
-      FC_ASSERT( from_account.sbd_balance >= sbd_spent, "Account cannot cover SBD costs of escrow. Required: ${r} Available: ${a}", ("r",sbd_spent)("a",from_account.sbd_balance) );
-
       _db.adjust_balance( from_account, -steem_spent );
       _db.adjust_balance( from_account, -sbd_spent );
 
@@ -1179,8 +1174,6 @@ void escrow_release_evaluator::do_apply( const escrow_release_operation& o )
 
 void transfer_evaluator::do_apply( const transfer_operation& o )
 {
-   FC_ASSERT( _db.get_balance( o.from, o.amount.symbol ) >= o.amount, "Account does not have sufficient funds for transfer." );
-
    FC_TODO( "Remove is producing after HF 21" );
    if( _db.is_producing() || _db.has_hardfork( STEEM_HARDFORK_0_21__3343 ) )
    {
@@ -1196,9 +1189,6 @@ void transfer_to_vesting_evaluator::do_apply( const transfer_to_vesting_operatio
 {
    const auto& from_account = _db.get_account(o.from);
    const auto& to_account = o.to.size() ? _db.get_account(o.to) : from_account;
-
-   FC_ASSERT( _db.get_balance( from_account, o.amount.symbol) >= o.amount,
-              "Account does not have sufficient liquid amount for transfer." );
 
    FC_TODO( "Remove is producing after HF 21" );
    if( _db.is_producing() || _db.has_hardfork( STEEM_HARDFORK_0_21__3343 ) )
@@ -1916,7 +1906,7 @@ void hf20_vote_evaluator( const vote_operation& o, database& _db )
 
    _db.modify( voter, [&]( account_object& a )
    {
-      util::update_manabar( _db.get_dynamic_global_properties(), a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ) );
+      util::update_manabar( _db.get_dynamic_global_properties(), a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), _db.head_block_num() > STEEM_HF_21_STALL_BLOCK );
    });
 
    if ( _db.has_hardfork( STEEM_HARDFORK_0_21__3004 ) )
@@ -2508,8 +2498,6 @@ void feed_publish_evaluator::do_apply( const feed_publish_operation& o )
 
 void convert_evaluator::do_apply( const convert_operation& o )
 {
-  FC_ASSERT( _db.get_balance( o.owner, o.amount.symbol ) >= o.amount, "Account does not have sufficient balance for conversion." );
-
   _db.adjust_balance( o.owner, -o.amount );
 
   const auto& fhistory = _db.get_feed_history();
@@ -2537,8 +2525,6 @@ void limit_order_create_evaluator::do_apply( const limit_order_create_operation&
    {
       FC_ASSERT( o.expiration <= _db.head_block_time() + STEEM_MAX_LIMIT_ORDER_EXPIRATION, "Limit Order Expiration must not be more than 28 days in the future" );
    }
-
-   FC_ASSERT( _db.get_balance( o.owner, o.amount_to_sell.symbol ) >= o.amount_to_sell, "Account does not have sufficient funds for limit order." );
 
    _db.adjust_balance( o.owner, -o.amount_to_sell );
 
@@ -2575,8 +2561,6 @@ void limit_order_create2_evaluator::do_apply( const limit_order_create2_operatio
    {
       FC_ASSERT( o.expiration <= _db.head_block_time() + STEEM_MAX_LIMIT_ORDER_EXPIRATION, "Limit Order Expiration must not be more than 28 days in the future" );
    }
-
-   FC_ASSERT( _db.get_balance( o.owner, o.amount_to_sell.symbol ) >= o.amount_to_sell, "Account does not have sufficient funds for limit order." );
 
    _db.adjust_balance( o.owner, -o.amount_to_sell );
 
@@ -2850,7 +2834,6 @@ void transfer_to_savings_evaluator::do_apply( const transfer_to_savings_operatio
 {
    const auto& from = _db.get_account( op.from );
    const auto& to   = _db.get_account(op.to);
-   FC_ASSERT( _db.get_balance( from, op.amount.symbol ) >= op.amount, "Account does not have sufficient funds to transfer to savings." );
 
    FC_TODO( "Remove is producing after HF 21" );
    if( _db.is_producing() || _db.has_hardfork( STEEM_HARDFORK_0_21__3343 ) )
@@ -2992,7 +2975,7 @@ void claim_reward_balance_evaluator::do_apply( const claim_reward_balance_operat
    {
       if( _db.has_hardfork( STEEM_HARDFORK_0_20__2539 ) )
       {
-         util::update_manabar( _db.get_dynamic_global_properties(), a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), op.reward_vests.amount.value );
+         util::update_manabar( _db.get_dynamic_global_properties(), a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), _db.head_block_num() > STEEM_HF_21_STALL_BLOCK, op.reward_vests.amount.value );
       }
 
       a.vesting_shares += op.reward_vests;
@@ -3101,7 +3084,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
 
       _db.modify( delegator, [&]( account_object& a )
       {
-         util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ) );
+         util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), _db.head_block_num() > STEEM_HF_21_STALL_BLOCK );
       });
 
       available_shares = asset( delegator.voting_manabar.current_mana, VESTS_SYMBOL );
@@ -3197,7 +3180,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
       {
          if( _db.has_hardfork( STEEM_HARDFORK_0_20__2539 ) )
          {
-            util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), op.vesting_shares.amount.value );
+            util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), _db.head_block_num() > STEEM_HF_21_STALL_BLOCK, op.vesting_shares.amount.value );
          }
 
          a.received_vesting_shares += op.vesting_shares;
@@ -3235,7 +3218,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
       {
          if( _db.has_hardfork( STEEM_HARDFORK_0_20__2539 ) )
          {
-            util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), delta.amount.value );
+            util::update_manabar( gpo, a, _db.has_hardfork( STEEM_HARDFORK_0_21__3336 ), _db.head_block_num() > STEEM_HF_21_STALL_BLOCK, delta.amount.value );
          }
 
          a.received_vesting_shares += delta;
