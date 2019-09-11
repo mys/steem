@@ -930,6 +930,7 @@ void database::_push_transaction( const signed_transaction& trx )
    auto temp_session = start_undo_session();
    ilog("_push_transaction()");
    _apply_transaction( trx );
+   ilog("_push_transaction() time check");
    _pending_tx.push_back( trx );
 
    notify_changed_objects();
