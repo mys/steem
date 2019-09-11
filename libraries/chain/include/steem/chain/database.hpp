@@ -528,7 +528,7 @@ namespace steem { namespace chain {
 
          void apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
          void _apply_block( const signed_block& next_block );
-         void _apply_transaction( const signed_transaction& trx );
+         void _apply_transaction( const signed_transaction& trx, bool log = false );
          void apply_operation( const operation& op );
 
          void process_required_actions( const required_automated_actions& actions );
