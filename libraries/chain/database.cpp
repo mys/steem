@@ -2936,7 +2936,7 @@ void database::validate_transaction( const signed_transaction& trx )
    {
       auto session = start_undo_session();
       ilog("validate_transaction()");
-      _apply_transaction( trx );
+      _apply_transaction( trx, false );
       session.undo();
    });
 }
@@ -3409,10 +3409,10 @@ try {
 
 void database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
-   detail::with_skip_flags( *this, skip, [&]() { _apply_transaction(trx); });
+   detail::with_skip_flags( *this, skip, [&]() { _apply_transaction(trx, false); });
 }
 
-void database::_apply_transaction(const signed_transaction& trx, bool log = false)
+void database::_apply_transaction(const signed_transaction& trx, bool log)
 { try {
    transaction_notification note(trx);
    _current_trx_id = note.transaction_id;
