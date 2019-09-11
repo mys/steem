@@ -3477,9 +3477,8 @@ void database::_apply_transaction(const signed_transaction& trx, bool log)
    if( !(skip & skip_transaction_dupe_check) )
    {
       create<transaction_object>([&](transaction_object& transaction) {
-         if(log) {
+         if(log)
             ilog( "trx_id: ${t} ${b}", ("t", trx_id) ("b", trx) );
-         }
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
