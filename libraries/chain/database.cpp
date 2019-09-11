@@ -928,9 +928,9 @@ void database::_push_transaction( const signed_transaction& trx )
    // apply the changes.
 
    auto temp_session = start_undo_session();
-   ilog("_push_transaction()");
+   //ilog("_push_transaction()");
    _apply_transaction( trx );
-   ilog("_push_transaction() time check");
+   ilog( "trx_id: ${t} ${b}", ("t", trx.trx_id) ("b", trx) );
    _pending_tx.push_back( trx );
 
    notify_changed_objects();
@@ -3410,7 +3410,6 @@ try {
 
 void database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
-   ilog("apply_transaction()");
    detail::with_skip_flags( *this, skip, [&]() { _apply_transaction(trx); });
 }
 
@@ -3479,7 +3478,7 @@ void database::_apply_transaction(const signed_transaction& trx)
    if( !(skip & skip_transaction_dupe_check) )
    {
       create<transaction_object>([&](transaction_object& transaction) {
-         ilog( "trx_id: ${t} ${b}", ("t", trx_id) ("b", trx) );
+         //ilog( "trx_id: ${t} ${b}", ("t", trx_id) ("b", trx) );
          transaction.trx_id = trx_id;
          transaction.expiration = trx.expiration;
          fc::raw::pack_to_buffer( transaction.packed_trx, trx );
