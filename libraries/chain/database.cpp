@@ -928,6 +928,7 @@ void database::_push_transaction( const signed_transaction& trx )
    // apply the changes.
 
    auto temp_session = start_undo_session();
+   ilog("_push_transaction()");
    _apply_transaction( trx );
    _pending_tx.push_back( trx );
 
@@ -2934,6 +2935,7 @@ void database::validate_transaction( const signed_transaction& trx )
    database::with_write_lock( [&]()
    {
       auto session = start_undo_session();
+      ilog("validate_transaction()");
       _apply_transaction( trx );
       session.undo();
    });
@@ -3407,6 +3409,7 @@ try {
 
 void database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
+   ilog("apply_transaction()");
    detail::with_skip_flags( *this, skip, [&]() { _apply_transaction(trx); });
 }
 
