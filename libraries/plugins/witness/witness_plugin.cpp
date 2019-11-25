@@ -482,6 +482,7 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
    my->_chain_plugin.register_block_generator( get_name(), my->_block_producer );
 
    STEEM_LOAD_VALUE_SET( options, "witness", my->_witnesses, steem::protocol::account_name_type )
+   STEEM_LOAD_VALUE_SET( options, "witness_two", my->_witnesses, steem::protocol::account_name_type )
 
    if( options.count("private-key") )
    {
